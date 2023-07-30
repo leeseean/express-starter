@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model city_list {
+  id            Int            @id @default(autoincrement())
+  area          String?        @db.VarChar(45)
+  author        String?        @db.VarChar(45)
+  avatar        String?        @db.VarChar(255)
+  brief         String?        @db.VarChar(255)
+  city          String?        @db.VarChar(15)
+  cover         String?        @db.VarChar(255)
+  href          String?        @db.VarChar(45)
+  timeSpan      String?        @db.VarChar(45)
+  title         String?        @db.VarChar(200)
+  province_id   Int?
+  province_list province_list? @relation(fields: [province_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "province_id")
+  detail        detail[]
+
+  @@index([province_id], map: "province_id_idx")
+}
+
+model detail {
+  id              Int           @id @unique(map: "id_UNIQUE") @default(autoincrement())
+  age             String?       @db.VarChar(25)
+  city            String?       @db.VarChar(100)
+  content         String?       @db.LongText
+  pics            Json?
+  price           String?       @db.VarChar(45)
+  qq              String?       @db.VarChar(150)
+  score           String?       @db.VarChar(105)
+  skill           String?       @db.VarChar(255)
+  tel             String?       @db.VarChar(200)
+  wx              String?       @db.VarChar(130)
+  city_id         Int?
+  required_points Float         @default(30) @db.Float
+  access_list     access_list[]
+  city_list       city_list?    @relation(fields: [city_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "city_id")
+
+  @@index([city_id], map: "city_id_idx")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model province_list {
+  id        Int         @id @default(autoincrement())
+  title     String?     @unique(map: "title_UNIQUE") @db.VarChar(5)
+  cities    Json?
+  sort_num  Int?        @unique(map: "sort_num_UNIQUE")
+  city_list city_list[]
+}
+
+model user {
+  id          Int           @id @unique(map: "id_UNIQUE") @default(autoincrement())
+  username    String?       @unique(map: "username_UNIQUE") @db.VarChar(45)
+  password    String?       @db.VarChar(45)
+  balance     Float         @default(0) @db.Float
+  access_list access_list[]
+  points_log  points_log[]
+}
+
+model access_list {
+  id        Int    @unique(map: "id_UNIQUE") @default(autoincrement())
+  detail_id Int
+  user_id   Int
+  detail    detail @relation(fields: [detail_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_access_list_detail_id")
+  user      user   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_access_list_user_id")
+
+  @@id([detail_id, user_id])
+  @@index([user_id], map: "fk_access_list_user_id")
+}
+
+model points_log {
+  id            Int       @id @default(autoincrement())
+  user_id       Int?
+  points_change Float?    @db.Float
+  points_type   String?   @db.VarChar(255)
+  remark        String?   @db.VarChar(255)
+  date          DateTime? @default(now()) @db.DateTime(0)
+  user          user?     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "points_log_ibfk_1")
+
+  @@index([user_id], map: "user_id")
+}
